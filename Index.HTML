@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Stack Game</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #111; }
+    canvas { display: block; }
+    #score {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: #fff;
+      font-family: sans-serif;
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Score: 0</div>
+  <canvas id="gameCanvas"></canvas>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let stack = [];
+    let speed = 4;
+    let direction = 1;
+    let currentX = 0;
+    let blockWidth = canvas.width / 2;
+    let blockHeight = 30;
+    let score = 0;
+
+    function drawBlock(x, y, width) {
+      ctx.fillStyle = `hsl(${score * 10 % 360}, 70%, 50%)`;
+      ctx.fillRect(x, y, width, blockHeight);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stack.forEach((block, i) => drawBlock(block.x, canvas.height - (i + 1) * blockHeight, block.width));
+      drawBlock(currentX, canvas.height - (stack.length + 1) * blockHeight, blockWidth);
+    }
+
+    function update() {
+      currentX += speed * direction;
+      if (currentX + blockWidth > canvas.width || currentX < 0) direction *= -1;
+      draw();
+      requestAnimationFrame(update);
+    }
+
+    canvas.addEventListener('click', () => {
+      let lastBlock = stack[stack.length - 1];
+      let newBlock = { x: currentX, width: blockWidth };
+      if (lastBlock) {
+        let overlap = Math.min(lastBlock.x + lastBlock.width, newBlock.x + newBlock.width) - Math.max(lastBlock.x, newBlock.x);
+        if (overlap <= 0) {
+          alert('Game Over! Final Score: ' + score);
+          stack = [];
+          blockWidth = canvas.width / 2;
+          score = 0;
+          document.getElementById('score').textContent = 'Score: 0';
+          return;
+        }
+        newBlock.x = Math.max(lastBlock.x, newBlock.x);
+        newBlock.width = overlap;
+        blockWidth = overlap;
+      }
+      stack.push(newBlock);
+      score++;
+      document.getElementById('score').textContent = 'Score: ' + score;
+    });
+
+    update();
+  </script>
+</body>
+</html>
